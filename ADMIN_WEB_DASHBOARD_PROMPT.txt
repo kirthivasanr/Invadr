@@ -1,0 +1,304 @@
+================================================================================
+  INVADR — ADMIN WEB DASHBOARD ·  MASTER BUILD PROMPT
+================================================================================
+
+Build me a fully responsive, single-page ADMIN WEB DASHBOARD for my invasive
+species tracking app called "Invadr". The web dashboard must replicate ALL
+functionality of the existing mobile admin dashboard, styled with a modern,
+clean, dark-header + light-content design. Use plain HTML + CSS + vanilla JS
+(or optionally React / Next.js — your pick) with no paid dependencies.
+
+The backend is already running. DO NOT build a new backend — consume the
+existing FastAPI REST API.
+
+────────────────────────────────────────────────────────────────────────────────
+1.  BACKEND API (already built — just consume these endpoints)
+────────────────────────────────────────────────────────────────────────────────
+
+Base URL:  http://10.140.98.110:8000   (change to your server IP if different)
+
+AUTH
+  POST /auth/login       { email, password }  →  { id, email, name, role, token }
+  POST /auth/register    { email, password, name, role, phone?, home_location?,
+                           home_latitude?, home_longitude? }  →  same shape
+
+  • Store the JWT token and send it as:
+      Authorization: Bearer <token>
+  • Only role === "admin" can access admin endpoints.
+
+ADMIN ENDPOINTS (require Bearer token from an admin user)
+  GET /admin/reports     → Array of report objects (see shape below)
+  GET /admin/stats       → { total_reports, total_users, total_admins,
+                             high_risk_reports, species_distribution: {name:count},
+                             users: [{id, email, name, role}] }
+  GET /admin/users       → [{id, email, name, role}]
+
+PUBLIC ENDPOINTS
+  GET /reports           → same report objects (no auth required)
+  GET /uploads/{filename}→ serves image/audio files
+  GET /health            → { status, ml_model_loaded, users_count, reports_count }
+
+ALERT ENDPOINT
+  POST /alert-locals     { species, location }  →  triggers Twilio voice calls
+
+
+REPORT OBJECT SHAPE (from /admin/reports):
+{
+  "id": "uuid",
+  "latitude": 12.345678,
+  "longitude": 78.123456,
+  "timestamp": "2026-02-22T10:30:00Z",
+  "notes": "Found near riverbank",
+  "userId": "uuid",
+  "userName": "John Doe",
+  "userEmail": "john@example.com",
+  "prediction": {
+    "species_name": "Lantana",
+    "confidence_score": 0.92,
+    "invasive_risk_level": "high"   // "low" | "medium" | "high"
+  } | null,
+  "has_image": true,
+  "has_audio": false,
+  "image_path": "/uploads/uuid_image.jpg",
+  "audio_path": "/uploads/uuid_audio.m4a",  // only if has_audio
+  "created_at": 1740000000.0
+}
+
+To build full image URLs:  API_BASE_URL + image_path
+  → e.g. http://10.140.98.110:8000/uploads/abc123_image.jpg
+
+────────────────────────────────────────────────────────────────────────────────
+2.  PAGES / VIEWS
+────────────────────────────────────────────────────────────────────────────────
+
+A) LOGIN PAGE
+   - Clean centered card with Invadr branding (green leaf theme)
+   - Email + Password fields, "Sign In" button
+   - POST /auth/login → if role !== "admin", show error "Admin access only"
+   - On success, store token in localStorage, redirect to Dashboard
+
+B) DASHBOARD (main page after login)
+   Must include ALL of the following sections:
+
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │  HEADER BAR                                                         │
+   │  - "Admin Dashboard" title                                          │
+   │  - "Welcome, {admin name}" subtitle                                 │
+   │  - LIVE / PAUSED toggle (red blinking dot when live)                │
+   │  - Logout button                                                    │
+   └──────────────────────────────────────────────────────────────────────┘
+
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │  STATS ROW  (3 cards side-by-side)                                  │
+   │  ┌──────────┐  ┌──────────┐  ┌──────────┐                          │
+   │  │ REPORTS  │  │  USERS   │  │  ADMINS  │                          │
+   │  │   12     │  │    8     │  │    2     │                          │
+   │  └──────────┘  └──────────┘  └──────────┘                          │
+   │  Each card: icon, big number, label. Colored left border accent.    │
+   └──────────────────────────────────────────────────────────────────────┘
+
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │  TAB BAR:  [ Photo Feed ]  [ Live Map ]  [ Users ]                  │
+   │  (Users tab is extra for web — shows table of all registered users) │
+   └──────────────────────────────────────────────────────────────────────┘
+
+   ── TAB 1: PHOTO FEED ──────────────────────────────────────────────────
+   - 2-column responsive grid of report cards (3 columns on wide screens)
+   - Each card shows:
+       • Uploaded photo (from imageUrl)
+       • RISK badge top-right corner (LOW=green, MEDIUM=amber, HIGH=red)
+       • Species name
+       • Reporter name (with person icon)
+       • Coordinates (with location icon)
+       • "3h ago" / "2d ago" relative timestamp
+   - Click a card → opens DETAIL MODAL (see below)
+   - Empty state: cloud-upload icon + "No Reports Yet" message
+
+   ── TAB 2: LIVE MAP ────────────────────────────────────────────────────
+   - Full-width interactive map (use Leaflet.js — free, no API key needed)
+   - Dark map tile theme (use CartoDB dark_all or similar free dark tiles):
+       https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png
+   - Green location-pin markers for each report (with white leaf icon)
+       • Pin = dark green (#2D6A4F) circle, 44px, white border, leaf icon
+       • Triangular tail/pointer below the circle
+   - Click marker → popup card appears showing:
+       • Report photo thumbnail
+       • Species name
+       • Timestamp
+       • "View details" link → opens detail modal
+   - Density circle overlay toggle (green translucent circles, 2km radius)
+   - Map controls: zoom in/out, center on user location, layer toggle
+   - Report count badge top-left: "{N} reports"
+
+   ── TAB 3: USERS TABLE (web-only extra) ────────────────────────────────
+   - Table with columns: Name, Email, Role
+   - Role shown as colored badge (admin = amber, user = green)
+   - Data from GET /admin/users
+
+   ── DETAIL MODAL (opens when clicking any report card or map popup) ────
+   - Full report image (large)
+   - Species Identified section:
+       • Risk level colored dot + species name + confidence percentage
+       • "Risk: HIGH" label
+   - Location section:
+       • Latitude, Longitude in monospace font
+   - Reported By section:
+       • User name + email
+   - Timestamp section
+   - Notes section (if any)
+   - Audio playback (if has_audio, embed <audio> player with src = audioUrl)
+   - Close button (X) top-right
+
+────────────────────────────────────────────────────────────────────────────────
+3.  LIVE POLLING
+────────────────────────────────────────────────────────────────────────────────
+
+- When LIVE mode is ON, poll GET /admin/reports and GET /admin/stats every
+  8 seconds (same as mobile app)
+- When PAUSED, stop polling
+- Show a blinking red dot + "LIVE" text when active
+- Auto-refresh the photo feed grid and map markers on each poll
+
+────────────────────────────────────────────────────────────────────────────────
+4.  DESIGN SYSTEM / COLORS
+────────────────────────────────────────────────────────────────────────────────
+
+Primary green:    #2D6A4F
+Primary dark:     #1B4D3E
+Primary light:    #E8F5EE
+
+Background:       #F6F7F9  (light gray)
+Surface/cards:    #FFFFFF
+Header bg:        #FFFFFF with subtle bottom border #E8EAED
+
+Text primary:     #1A1D21
+Text secondary:   #4A5568
+Text muted:       #8C939B
+Text dim:         #9CA3AF
+
+Danger/red:       #EF4444
+Warning/amber:    #F59E0B
+Info/blue:        #3B82F6
+Success/green:    #10B981
+
+Risk badge colors:
+  low     → #10B981 (green)
+  medium  → #F59E0B (amber)
+  high    → #EF4444 (red)
+  unknown → #9CA3AF (gray)
+
+Card style:
+  border-radius: 16px
+  subtle shadow: 0 4px 10px rgba(0,0,0,0.05)
+  stat cards have a 3px colored left border
+
+Tab bar:
+  Background: #EDEEF1
+  Active tab:  #DCF5E7 background, #2D6A4F text
+  Inactive:    transparent, #8C939B text
+
+Fonts:
+  System font stack: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+  Headings: font-weight 800
+  Stats numbers: font-size 28px, weight 800
+  Labels: 11px uppercase, letter-spacing 0.8px, weight 700
+
+────────────────────────────────────────────────────────────────────────────────
+5.  RESPONSIVE LAYOUT
+────────────────────────────────────────────────────────────────────────────────
+
+Desktop (>1024px):
+  - Sidebar navigation (optional) or top header
+  - Photo grid: 3 columns
+  - Map: full width below tabs
+  - Detail modal: centered, max-width 600px
+
+Tablet (768–1024px):
+  - Photo grid: 2 columns
+
+Mobile (<768px):
+  - Photo grid: 1 column
+  - Stack everything vertically
+  - Hamburger menu if using sidebar
+
+────────────────────────────────────────────────────────────────────────────────
+6.  MAP SPECIFICS (Leaflet.js)
+────────────────────────────────────────────────────────────────────────────────
+
+Use Leaflet.js (free, open-source):
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
+
+Dark tiles (free, no key):
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    maxZoom: 19
+  })
+
+Custom marker: use L.divIcon with HTML/CSS for the green pin:
+  - 44px dark green circle (#2D6A4F) with 3px white border
+  - White leaf icon (use Font Awesome leaf or inline SVG)
+  - Triangular pointer/tail below
+  - Drop shadow
+
+Default center: India (lat 20.5937, lon 78.9629, zoom 5)
+  — or auto-fit bounds to all report markers
+
+────────────────────────────────────────────────────────────────────────────────
+7.  ALERT / EMERGENCY FEATURE
+────────────────────────────────────────────────────────────────────────────────
+
+In the report detail modal, if the report is HIGH risk, show an
+"Alert Local Authorities" button (red). On click:
+  POST /alert-locals  { species: "Lantana", location: "12.34, 78.56" }
+This triggers a Twilio voice call to local contacts.
+Show success/error toast after the call.
+
+────────────────────────────────────────────────────────────────────────────────
+8.  EXTRA WEB-ONLY FEATURES (nice to have)
+────────────────────────────────────────────────────────────────────────────────
+
+- Species distribution bar chart / pie chart (from stats.species_distribution)
+  Use Chart.js (free) or simple CSS bars
+- Export reports as CSV button
+- Search/filter reports by species, risk level, date range
+- Sort reports by newest, oldest, highest risk
+- Dark mode toggle
+
+────────────────────────────────────────────────────────────────────────────────
+9.  KEY IMPLEMENTATION NOTES
+────────────────────────────────────────────────────────────────────────────────
+
+• All image URLs = API_BASE_URL + report.image_path
+    e.g. http://10.140.98.110:8000/uploads/abc_image.jpg
+• All audio URLs = API_BASE_URL + report.audio_path  (if has_audio)
+• Bearer token must be sent in Authorization header for /admin/* endpoints
+• The backend has CORS allow_origins=["*"] so no CORS issues
+• Reports are returned sorted by created_at descending (newest first)
+• The login endpoint returns role — reject non-admin logins on the frontend
+• Relative timestamps: "just now", "5m ago", "3h ago", "2d ago"
+• Confidence scores are 0.0–1.0, display as percentage (e.g. 0.92 → 92%)
+
+────────────────────────────────────────────────────────────────────────────────
+10.  FILE STRUCTURE (suggested)
+────────────────────────────────────────────────────────────────────────────────
+
+admin-web/
+├── index.html          ← login page
+├── dashboard.html      ← main dashboard
+├── css/
+│   └── styles.css      ← all styles
+├── js/
+│   ├── api.js          ← API calls (login, fetchReports, fetchStats, etc.)
+│   ├── auth.js         ← login/logout, token management
+│   ├── dashboard.js    ← main dashboard logic, tabs, polling
+│   ├── map.js          ← Leaflet map setup, markers, popups
+│   └── utils.js        ← timeAgo, formatTimestamp, riskColor helpers
+└── assets/
+    └── logo.svg        ← Invadr leaf logo (optional)
+
+OR if using React:  npx create-react-app admin-web  (or Next.js / Vite)
+
+================================================================================
+  END OF PROMPT — Build the complete web admin dashboard from this spec.
+================================================================================

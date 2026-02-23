@@ -1,0 +1,71 @@
+{
+  "expo": {
+    "name": "Invadr",
+    "slug": "invadr",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1B3C28"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.invadr.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Invadr uses your location to geo-tag invasive species reports.",
+        "NSLocationAlwaysUsageDescription": "Invadr uses your location to geo-tag invasive species reports.",
+        "NSCameraUsageDescription": "Invadr uses your camera to capture photos of invasive species.",
+        "NSPhotoLibraryUsageDescription": "Invadr uses your photo library to attach images to reports."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f1923"
+      },
+      "package": "com.invadr.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Invadr to use your location."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Invadr to access your camera."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Invadr to access your photos."
+        }
+      ],
+      "expo-secure-store",
+      "expo-asset",
+      "expo-font",
+      "expo-audio"
+    ],
+    "scheme": "invadr",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
