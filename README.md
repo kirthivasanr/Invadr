@@ -114,7 +114,7 @@ netsh advfirewall firewall add rule name="FastAPI" dir=in action=allow protocol=
 npx expo start --lan --clear
 ```
 
-Scan the QR code with **Expo Go** on your phone.
+Scan the QR code with **Expo Go** on your phone
 
 ### Login credentials
 
