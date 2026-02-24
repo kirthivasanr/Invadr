@@ -191,3 +191,9 @@ All tunable values are centralised in `src/constants/index.ts`:
 | HTTP Client | Axios |
 | Map | react-native-maps |
 | Backend | FastAPI (Python) |
+
+By Team Jimbojiam
+--Sachin S
+--Kirthivasan MR
+--Dinesh Karthick MS
+--Siva Rama Guru Athithan
