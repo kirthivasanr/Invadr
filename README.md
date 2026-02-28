@@ -6,6 +6,12 @@ Invadr is an AI-powered ecological monitoring platform that enables users and dr
 
 The platform integrates mobile applications, drone imaging, and scalable cloud infrastructure.
 
+![WhatsApp Image 2026-02-22 at 3 38 22 PM](https://github.com/user-attachments/assets/db7d1946-1cc1-4d21-ba96-c635f4cf262a)
+![WhatsApp Image 2026-02-28 at 2 53 02 PM](https://github.com/user-attachments/assets/f3482ed3-819b-4182-afbb-b35f218d11e9)
+![WhatsApp Image 2026-02-28 at 2 53 02 PM (1)](https://github.com/user-attachments/assets/cc0594b5-7200-4d8a-a439-3b2841a40432)
+![WhatsApp Image 2026-02-28 at 2 53 02 PM (2)](https://github.com/user-attachments/assets/773e412a-5dac-4237-9898-90f009318baf)
+
+
 ---
 
 ## Architecture
