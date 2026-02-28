@@ -1,6 +1,10 @@
 # Invadr 🌿
 
-> Offline-first invasive species reporting for farmers, hikers, and field workers.
+## Won NxtGen Hackathon with this project
+
+Invadr is an AI-powered ecological monitoring platform that enables users and drones to capture geotagged environmental data, detect invasive species using computer vision, and provide real-time analytics through a cloud-based dashboard.
+
+The platform integrates mobile applications, drone imaging, and scalable cloud infrastructure.
 
 ---
 
